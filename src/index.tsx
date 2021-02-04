@@ -21,7 +21,6 @@ function Square(props: SquareProps) {
   );
 }
 
-
 interface BoardProps {
   squares: SquareValue[];
   highlightedLine: number[];
@@ -45,12 +44,12 @@ class Board extends React.Component<BoardProps, {}> {
     const rows = [0, 1, 2];
     return (
       <div>
-        {rows.map(row => {
+        {rows.map((row) => {
           return (
-            <div className='board-row' key={row}>
-              {cols.map(col => this.renderSquare(3 * row + col))}
+            <div className="board-row" key={row}>
+              {cols.map((col) => this.renderSquare(3 * row + col))}
             </div>
-          )
+          );
         })}
       </div>
     );
@@ -81,12 +80,12 @@ class Game extends React.Component<{}, GameState> {
       history: [
         {
           squares: Array(9).fill(null),
-        }
+        },
       ],
       stepNumber: 0,
       xIsNext: true,
       historyOrderAsc: true,
-    }
+    };
   }
 
   handleClick(i: number) {
@@ -98,46 +97,50 @@ class Game extends React.Component<{}, GameState> {
     }
     squares[i] = this.state.xIsNext ? 'X' : 'O';
     this.setState({
-      history: history.concat([{
-        squares: squares,
-        latestLoc: {
-          col: i % 3,
-          row: Math.trunc(i / 3),
+      history: history.concat([
+        {
+          squares: squares,
+          latestLoc: {
+            col: i % 3,
+            row: Math.trunc(i / 3),
+          },
         },
-      }]),
+      ]),
       stepNumber: history.length,
       xIsNext: !this.state.xIsNext,
     });
   }
 
   jumpTo(step: number) {
-    this.setState(
-      {
-        stepNumber: step,
-        xIsNext: (step % 2) === 0,
-      }
-    )
+    this.setState({
+      stepNumber: step,
+      xIsNext: step % 2 === 0,
+    });
   }
 
   toggleHistoryOrder() {
-    this.setState(
-      {
-        historyOrderAsc: !this.state.historyOrderAsc,
-      }
-    )
+    this.setState({
+      historyOrderAsc: !this.state.historyOrderAsc,
+    });
   }
 
   render() {
-    const history = this.state.historyOrderAsc ? this.state.history : this.state.history.slice().reverse();
-    const currentStepIndex = this.state.historyOrderAsc ? this.state.stepNumber : history.length - 1 - this.state.stepNumber;
+    const history = this.state.historyOrderAsc
+      ? this.state.history
+      : this.state.history.slice().reverse();
+    const currentStepIndex = this.state.historyOrderAsc
+      ? this.state.stepNumber
+      : history.length - 1 - this.state.stepNumber;
     const current = history[currentStepIndex];
     const winnerData = calculateWinner(current.squares);
 
     const moves = history.map((step, move) => {
-      const moveIndex = this.state.historyOrderAsc ? move : history.length - 1 - move;
-      const desc = moveIndex ?
-        `Go to move # ${moveIndex} (Latest / col: ${step.latestLoc?.col}, row: ${step.latestLoc?.row})` :
-        'Go to game start';
+      const moveIndex = this.state.historyOrderAsc
+        ? move
+        : history.length - 1 - move;
+      const desc = moveIndex
+        ? `Go to move # ${moveIndex} (Latest / col: ${step.latestLoc?.col}, row: ${step.latestLoc?.row})`
+        : 'Go to game start';
       return (
         <li key={moveIndex}>
           <button
@@ -148,7 +151,7 @@ class Game extends React.Component<{}, GameState> {
           </button>
         </li>
       );
-    })
+    });
 
     let status;
     if (winnerData.winner) {
@@ -180,7 +183,6 @@ class Game extends React.Component<{}, GameState> {
   }
 }
 
-
 interface WinnerDataset {
   winner?: SquareValue;
   line: number[];
@@ -197,7 +199,7 @@ function calculateWinner(squares: SquareValue[]): WinnerDataset {
     [0, 4, 8],
     [2, 4, 6],
   ];
-  for (let i = 0; i< lines.length; i++) {
+  for (let i = 0; i < lines.length; i++) {
     const [a, b, c] = lines[i];
     if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
       return {
@@ -212,7 +214,4 @@ function calculateWinner(squares: SquareValue[]): WinnerDataset {
   };
 }
 
-ReactDOM.render(
-  <Game />,
-  document.getElementById('root')
-);
+ReactDOM.render(<Game />, document.getElementById('root'));
