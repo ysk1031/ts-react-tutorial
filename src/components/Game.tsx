@@ -1,6 +1,6 @@
 import React from 'react';
 import { Board } from './Board';
-import { SquareValue } from './interface';
+import { SquareValue } from 'interface';
 
 interface Location {
   col: number;
