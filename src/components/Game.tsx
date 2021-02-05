@@ -1,49 +1,26 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Board } from './Board';
-import { SquareValue } from 'interface';
+import { Moves } from './Moves';
+import { SquareValue, HistoryUnit } from 'interface';
 
-interface Location {
-  col: number;
-  row: number;
-}
+export const Game: React.FC = () => {
+  const [history, setHistory] = useState<HistoryUnit[]>([
+    { squares: Array(9).fill(null) },
+  ]);
+  const [stepNumber, setStepNumber] = useState<number>(0);
+  const [xIsNext, setXISNext] = useState<boolean>(true);
+  const [historyOrderAsc, setHistoryOrderAsc] = useState<boolean>(true);
 
-interface History {
-  squares: SquareValue[];
-  latestLoc?: Location;
-}
-
-interface GameState {
-  history: History[];
-  stepNumber: number;
-  xIsNext: boolean;
-  historyOrderAsc: boolean;
-}
-
-export class Game extends React.Component<{}, GameState> {
-  constructor(props: {}) {
-    super(props);
-    this.state = {
-      history: [
-        {
-          squares: Array(9).fill(null),
-        },
-      ],
-      stepNumber: 0,
-      xIsNext: true,
-      historyOrderAsc: true,
-    };
-  }
-
-  handleClick(i: number) {
-    const history = this.state.history.slice(0, this.state.stepNumber + 1);
-    const current = history[history.length - 1];
+  const handleClick = (i: number) => {
+    const _history = history.slice(0, stepNumber + 1);
+    const current = _history[_history.length - 1];
     const squares = current.squares.slice();
     if (calculateWinner(squares).winner || squares[i]) {
       return;
     }
-    squares[i] = this.state.xIsNext ? 'X' : 'O';
-    this.setState({
-      history: history.concat([
+    squares[i] = xIsNext ? 'X' : 'O';
+    setHistory(
+      _history.concat([
         {
           squares: squares,
           latestLoc: {
@@ -52,82 +29,60 @@ export class Game extends React.Component<{}, GameState> {
           },
         },
       ]),
-      stepNumber: history.length,
-      xIsNext: !this.state.xIsNext,
-    });
-  }
-
-  jumpTo(step: number) {
-    this.setState({
-      stepNumber: step,
-      xIsNext: step % 2 === 0,
-    });
-  }
-
-  toggleHistoryOrder() {
-    this.setState({
-      historyOrderAsc: !this.state.historyOrderAsc,
-    });
-  }
-
-  render() {
-    const history = this.state.historyOrderAsc
-      ? this.state.history
-      : this.state.history.slice().reverse();
-    const currentStepIndex = this.state.historyOrderAsc
-      ? this.state.stepNumber
-      : history.length - 1 - this.state.stepNumber;
-    const current = history[currentStepIndex];
-    const winnerData = calculateWinner(current.squares);
-
-    const moves = history.map((step, move) => {
-      const moveIndex = this.state.historyOrderAsc
-        ? move
-        : history.length - 1 - move;
-      const desc = moveIndex
-        ? `Go to move # ${moveIndex} (Latest / col: ${step.latestLoc?.col}, row: ${step.latestLoc?.row})`
-        : 'Go to game start';
-      return (
-        <li key={moveIndex}>
-          <button
-            onClick={() => this.jumpTo(moveIndex)}
-            className={currentStepIndex === move ? 'text-bold' : ''}
-          >
-            {desc}
-          </button>
-        </li>
-      );
-    });
-
-    let status;
-    if (winnerData.winner) {
-      status = 'Winner: ' + winnerData.winner;
-    } else if (this.state.stepNumber >= current.squares.length) {
-      status = 'Draw';
-    } else {
-      status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
-    }
-
-    return (
-      <div className="game">
-        <div className="game-board">
-          <Board
-            squares={current.squares}
-            highlightedLine={winnerData.line}
-            onClick={(i) => this.handleClick(i)}
-          />
-        </div>
-        <div className="game-info">
-          <div>{status}</div>
-          <ol>{moves}</ol>
-          <button onClick={() => this.toggleHistoryOrder()}>
-            Toggle History Order
-          </button>
-        </div>
-      </div>
     );
+    setStepNumber(_history.length);
+    setXISNext(!xIsNext);
+  };
+
+  const jumpTo = (step: number) => {
+    setStepNumber(step);
+    setXISNext(step % 2 === 0);
+  };
+
+  const toggleHistoryOrder = () => {
+    setHistoryOrderAsc(!historyOrderAsc);
+  };
+
+  const orderedHistory = historyOrderAsc ? history : history.slice().reverse();
+  const currentStepIndex = historyOrderAsc
+    ? stepNumber
+    : orderedHistory.length - 1 - stepNumber;
+  const current: HistoryUnit = orderedHistory[currentStepIndex];
+  const winnerData = calculateWinner(current.squares);
+
+  let status;
+  if (winnerData.winner) {
+    status = 'Winner: ' + winnerData.winner;
+  } else if (stepNumber >= current.squares.length) {
+    status = 'Draw';
+  } else {
+    status = 'Next player: ' + (xIsNext ? 'X' : 'O');
   }
-}
+
+  return (
+    <div className="game">
+      <div className="game-board">
+        <Board
+          squares={current.squares}
+          highlightedLine={winnerData.line}
+          onClick={(i) => handleClick(i)}
+        />
+      </div>
+      <div className="game-info">
+        <div>{status}</div>
+        <Moves
+          history={orderedHistory}
+          historyOrderAsc={historyOrderAsc}
+          currentStepIndex={currentStepIndex}
+          jumpTo={jumpTo}
+        />
+        <button onClick={() => toggleHistoryOrder()}>
+          Toggle History Order
+        </button>
+      </div>
+    </div>
+  );
+};
 
 interface WinnerDataset {
   winner?: SquareValue;

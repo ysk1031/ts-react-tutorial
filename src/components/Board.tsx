@@ -13,17 +13,6 @@ export const Board: React.FC<BoardProps> = ({
   highlightedLine,
   onClick,
 }) => {
-  const renderSquare = (i: number) => {
-    return (
-      <Square
-        value={squares[i]}
-        highlighted={highlightedLine.includes(i)}
-        onClick={() => onClick(i)}
-        key={i}
-      />
-    );
-  };
-
   const cols = [0, 1, 2];
   const rows = [0, 1, 2];
   return (
@@ -31,7 +20,17 @@ export const Board: React.FC<BoardProps> = ({
       {rows.map((row) => {
         return (
           <div className="board-row" key={row}>
-            {cols.map((col) => renderSquare(3 * row + col))}
+            {cols.map((col: number) => {
+              const index = 3 * row + col;
+              return (
+                <Square
+                  value={squares[index]}
+                  highlighted={highlightedLine.includes(index)}
+                  onClick={() => onClick(index)}
+                  key={index}
+                />
+              );
+            })}
           </div>
         );
       })}
